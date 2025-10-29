@@ -21,7 +21,6 @@ interface RoomDAO {
     @Insert(onConflict = REPLACE)
     suspend fun insertMessage(messageDBO: MessageDBO)
 
-    // Работа с эмоциональными днями
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateEmotionDay(emotionDay: EmotionDayDTO)
 

@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kapt)
@@ -7,21 +7,14 @@ plugins {
 }
 
 android {
-    namespace = "com.hackhathon.mentalhealthapp"
+    namespace = "com.hackhathon.features"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.hackhathon.mentalhealthapp"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    packagingOptions {
-        resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -40,17 +33,11 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    buildFeatures {
-        compose = true
-    }
 }
 
 dependencies {
-    implementation(project(":yandex-gpt-api"))
     implementation(project(":data"))
     implementation(project(":domain"))
-    implementation(project(":local-database"))
-    implementation(project(":features"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -71,7 +58,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
-
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.compiler)
 }

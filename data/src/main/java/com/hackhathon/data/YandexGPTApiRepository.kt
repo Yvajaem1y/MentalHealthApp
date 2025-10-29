@@ -14,44 +14,59 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 
 class YandexGPTApiRepository @Inject constructor(
     private val apiClient: YandexGPTClient,
     private val roomDatabase: RoomDatabase,
 ) {
     private val dao get() = roomDatabase.roomDao
-    suspend fun requestToGpt(message: Message): Flow<GPTRequestResult<Message>> {
-        roomDatabase.roomDao.insertMessage(message.toMessageDBO())
-        val apiRequest = flow{ emit(withContext(Dispatchers.IO){apiClient.sendMessage(getPrompt(message))}.toRequestResult())}
-            .map { result -> result.map{text -> Message(sender = "server", text = text, date = Date()) }}
-            .also { it.map { requestResult ->
-                if (requestResult is GPTRequestResult.Success) {
 
-                    var text = requestResult.data?.text
+    suspend fun requestToGpt(message: Message): Flow<GPTRequestResult<Message>> = flow {
+        emit(GPTRequestResult.InProgress<Message>())
 
-                    if (text!=null){
-                        val value = text[0].toString().toInt()
-                        text = text.substring(1).trim()
+        try {
 
-                        addEmotionAssessment(value)
-                        val serverMessage = Message(
-                            sender = "server",
-                            text = text,
-                            date = Date()
-                        )
-                        roomDatabase.roomDao.insertMessage(serverMessage.toMessageDBO())
-                    }
-                    }
-                }
+            val response = withContext(Dispatchers.IO) {
+                apiClient.sendMessage(getPrompt(message))
             }
 
-        val start = flowOf<GPTRequestResult<Message>>(GPTRequestResult.InProgress())
+            val result = response.toGptRequestResult()
 
-        return merge(apiRequest,start)
+            when (result) {
+                is GPTRequestResult.Success -> {
+                    result.data?.let { text ->
+                        if (text.isNotEmpty() && text[0].isDigit()) {
+                            val value = text[0].toString().toInt()
+                            val messageText = text.substring(1).trim()
+
+                            addEmotionAssessment(value)
+
+                            val serverMessage = Message(
+                                sender = "server",
+                                text = messageText,
+                                date = Date()
+                            )
+                            roomDatabase.roomDao.insertMessage(message.toMessageDBO())
+                            roomDatabase.roomDao.insertMessage(serverMessage.toMessageDBO())
+
+                            emit(GPTRequestResult.Success(serverMessage))
+                        } else {
+                            emit(GPTRequestResult.Error( "Invalid response format"))
+                        }
+                    } ?: emit(GPTRequestResult.Error("Empty response from GPT"))
+                }
+                is GPTRequestResult.Error -> {
+                    emit(GPTRequestResult.Error(result.message))
+                }
+                is GPTRequestResult.InProgress -> {
+
+                }
+            }
+        } catch (e: Exception) {
+            emit(GPTRequestResult.Error(e.message ?: "Unknown error"))
+        }
     }
 
     suspend fun addEmotionAssessment(value: Int, date: Date = getDateWithoutTime()) {
@@ -71,12 +86,10 @@ class YandexGPTApiRepository @Inject constructor(
         dao.insertOrUpdateEmotionDay(updatedDay)
     }
 
-    // Получение дня по дате
     suspend fun getEmotionDay(date: Date = getDateWithoutTime()): EmotionDayDTO? {
         return dao.getEmotionDayByDate(date)
     }
 
-    // Получение всех дней за месяц
     suspend fun getMonthEmotionDays(year: Int, month: Int): List<EmotionDayDTO> {
         val calendar = Calendar.getInstance().apply {
             set(year, month, 1)
@@ -84,7 +97,6 @@ class YandexGPTApiRepository @Inject constructor(
         return dao.getEmotionDaysByMonth(calendar.time)
     }
 
-    // Удаление оценки из дня
     suspend fun removeAssessment(date: Date, assessmentIndex: Int) {
         val currentDay = dao.getEmotionDayByDate(date)
         currentDay?.let {
@@ -97,7 +109,6 @@ class YandexGPTApiRepository @Inject constructor(
         }
     }
 
-    // Вспомогательная функция для получения даты без времени
     private fun getDateWithoutTime(): Date {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
