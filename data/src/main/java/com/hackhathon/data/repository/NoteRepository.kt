@@ -1,8 +1,9 @@
-package com.hackhathon.data
+package com.hackhathon.data.repository
 
 import com.hackhathon.data.RequestResults.RequestResult
-import com.hackhathon.data.models.Message
-import com.hackhathon.data.utils.toMessage
+import com.hackhathon.data.models.Note
+import com.hackhathon.data.utils.toNote
+import com.hackhathon.data.utils.toNoteDBO
 import com.hackhathon.local_database.RoomDatabase
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -12,44 +13,47 @@ import kotlinx.coroutines.flow.map
 import java.util.Calendar
 import java.util.Date
 
-class MessageRepository @Inject constructor(
+class NoteRepository @Inject constructor(
     private val roomDatabase: RoomDatabase,
-) {
+){
+    suspend fun addNewNote(note: Note){
+        roomDatabase.roomDao.insertOrUpdateNote(note.toNoteDBO())
+    }
 
-    fun observeMessagesByDate(targetDate: Date): Flow<RequestResult<List<Message>>> {
+    fun observeNotesByDate(targetDate: Date): Flow<RequestResult<List<Note>>> {
         return flow {
             emit(RequestResult.InProgress())
 
             try {
                 val (startOfDay, endOfDay) = getDateRange(targetDate)
 
-                val initialMessages = roomDatabase.roomDao.getAllMessages()
-                    .filter { messageEntity ->
-                        val messageDate = messageEntity.toMessage().date
-                        messageDate >= startOfDay && messageDate < endOfDay
+                val initialNotes = roomDatabase.roomDao.getAllNotes()
+                    .filter { noteEntity ->
+                        val noteDate = noteEntity.toNote().date
+                        noteDate >= startOfDay && noteDate < endOfDay
                     }
-                    .map { it.toMessage() }
+                    .map { it.toNote() }
 
-                emit(RequestResult.Success(initialMessages))
+                emit(RequestResult.Success(initialNotes))
             } catch (e: Exception) {
-                emit(RequestResult.Error<List<Message>>(error = e))
+                emit(RequestResult.Error<List<Note>>(error = e))
                 return@flow
             }
 
-            roomDatabase.roomDao.observeAllMessages()
-                .map { messages ->
+            roomDatabase.roomDao.observeAllNotes()
+                .map { notes ->
                     val (startOfDay, endOfDay) = getDateRange(targetDate)
-                    messages.filter { messageEntity ->
-                        val messageDate = messageEntity.toMessage().date
-                        messageDate >= startOfDay && messageDate < endOfDay
-                    }.map { it.toMessage() }
+                    notes.filter { noteEntity ->
+                        val noteDate = noteEntity.toNote().date
+                        noteDate >= startOfDay && noteDate < endOfDay
+                    }.map { it.toNote() }
                 }
-                .collect { filteredMessages ->
-                    emit(RequestResult.Success(filteredMessages))
+                .collect { filteredNotes ->
+                    emit(RequestResult.Success(filteredNotes))
                 }
         }
             .catch { error ->
-                emit(RequestResult.Error<List<Message>>(error = error))
+                emit(RequestResult.Error<List<Note>>(error = error))
             }
     }
 

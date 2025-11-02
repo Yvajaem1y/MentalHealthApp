@@ -1,18 +1,17 @@
 package com.hackhathon.data
 
+import com.hackhathon.data.RequestResults.GPTRequestResult
+import com.hackhathon.data.RequestResults.toGptRequestResult
 import com.hackhathon.data.models.Message
 import com.hackhathon.data.utils.getPrompt
 import com.hackhathon.data.utils.toMessageDBO
 import com.hackhathon.local_database.RoomDatabase
-import com.hackhathon.local_database.models.EmotionDayDTO
+import com.hackhathon.local_database.models.EmotionDayDBO
 import com.hackhathon.yandex_gpt_api.YandexGPTClient
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Date
@@ -53,13 +52,15 @@ class YandexGPTApiRepository @Inject constructor(
 
                             emit(GPTRequestResult.Success(serverMessage))
                         } else {
-                            emit(GPTRequestResult.Error( "Invalid response format"))
+                            emit(GPTRequestResult.Error("Invalid response format"))
                         }
                     } ?: emit(GPTRequestResult.Error("Empty response from GPT"))
                 }
+
                 is GPTRequestResult.Error -> {
                     emit(GPTRequestResult.Error(result.message))
                 }
+
                 is GPTRequestResult.InProgress -> {
 
                 }
@@ -76,7 +77,7 @@ class YandexGPTApiRepository @Inject constructor(
         val updatedDay = if (currentDay != null) {
             currentDay.addAssessment(value)
         } else {
-            EmotionDayDTO(
+            EmotionDayDBO(
                 date = date,
                 assessments = listOf(value),
                 average = value.toDouble()
@@ -86,11 +87,11 @@ class YandexGPTApiRepository @Inject constructor(
         dao.insertOrUpdateEmotionDay(updatedDay)
     }
 
-    suspend fun getEmotionDay(date: Date = getDateWithoutTime()): EmotionDayDTO? {
+    suspend fun getEmotionDay(date: Date = getDateWithoutTime()): EmotionDayDBO? {
         return dao.getEmotionDayByDate(date)
     }
 
-    suspend fun getMonthEmotionDays(year: Int, month: Int): List<EmotionDayDTO> {
+    suspend fun getMonthEmotionDays(year: Int, month: Int): List<EmotionDayDBO> {
         val calendar = Calendar.getInstance().apply {
             set(year, month, 1)
         }
