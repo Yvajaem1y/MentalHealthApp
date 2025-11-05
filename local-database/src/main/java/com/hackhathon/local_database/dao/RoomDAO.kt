@@ -5,9 +5,11 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
+import com.hackhathon.local_database.models.BreathingTechniquesDBO
 import com.hackhathon.local_database.models.EmotionDayDBO
 import com.hackhathon.local_database.models.MessageDBO
 import com.hackhathon.local_database.models.NoteDBO
+import com.hackhathon.local_database.models.UserDataDBO
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
@@ -21,6 +23,21 @@ interface RoomDAO {
 
     @Insert(onConflict = REPLACE)
     suspend fun insertMessage(messageDBO: MessageDBO)
+
+    @Insert(onConflict = REPLACE)
+    suspend fun insertFavoriteTechnique(breathingTechniquesDBO: BreathingTechniquesDBO)
+
+    @Insert(onConflict = REPLACE)
+    suspend fun insertUserData(userDataDBO: UserDataDBO)
+
+    @Query("SELECT * FROM user_data_table")
+    fun observeUserData(): Flow<List<UserDataDBO>>
+
+    @Query("DELETE FROM favorite_technique_table WHERE id = :techniqueId")
+    suspend fun deleteFavoriteTechnique(techniqueId: Int)
+
+    @Query("SELECT * FROM favorite_technique_table")
+    fun observeFavoriteTechnique(): Flow<List<BreathingTechniquesDBO>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateEmotionDay(emotionDay: EmotionDayDBO)

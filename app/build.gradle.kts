@@ -18,6 +18,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_KEY", "\"AQVNxiWGkP_Tyh-SRBNxZ7KHxaOxLSA_vI5OAwBP\"")
+        buildConfigField("String", "FOLDER_ID", "\"b1g3h6r0glrjdddh24gc\"")
     }
 
     packagingOptions {
@@ -42,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig=true
     }
 }
 
@@ -72,9 +76,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
 
+    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.dagger.hilt.android)
     kapt(libs.dagger.hilt.compiler)
 
     implementation(libs.bumptech.glide.compose)
     implementation(libs.bumptech.glide)
+
+    implementation(libs.androidx.navigation.compose)
+
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.30.1")
+    implementation("androidx.activity:activity-compose:1.8.0")
+    implementation("com.google.accompanist:accompanist-pager:0.28.0")
 }

@@ -59,7 +59,7 @@ fun EmotionsSelector(
                 emotion = emotion,
                 isSelected = isSelected,
                 onEmotionSelected = onEmotionSelected,
-                modifier = Modifier.widthIn(min = 100.dp, max = 150.dp)
+                modifier = Modifier.widthIn(min = 50.dp, max = 150.dp)
             )
         }
     }
@@ -105,7 +105,7 @@ fun EmotionItem(
                     resId = R.font.inter_regular,
                 )
             ),
-            fontSize = 14.sp,
+            fontSize = 8.sp,
             color = Color.Black,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis

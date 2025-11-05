@@ -15,6 +15,7 @@ activityCompose = "1.11.0"
 composeBom = "2025.10.01"
 jetbrainsKotlinJvm = "2.2.21"
 loggingInterceptor = "5.2.1"
+navigationCompose = "2.9.5"
 retrofit = "3.0.0"
 kotlin-coroutines = "1.10.2"
 retrofit2KotlinxSerializationConverterVersion = "1.0.0"
@@ -25,13 +26,17 @@ roomKtx = "2.8.3"
 ksp = "2.2.20-2.0.4"
 dagger = "2.57.2"
 jakarta-inject = "2.0.1"
+navigationComposeJvmstubs = "2.9.5"
+hilt-navigation-compose = "1.0.0"
 
 [libraries]
+androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "annotation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomKtx" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomKtx" }
@@ -69,6 +74,7 @@ dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", ve
 dagger-compiler = { group = "com.google.dagger", name = "dagger-compiler", version.ref = "dagger" }
 dagger = { group = "com.google.dagger", name = "dagger", version.ref = "dagger" }
 jakarta-inject = {module = "jakarta.inject:jakarta.inject-api", version.ref= "jakarta-inject" }
+androidx-navigation-compose-jvmstubs = { group = "androidx.navigation", name = "navigation-compose-jvmstubs", version.ref = "navigationComposeJvmstubs" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

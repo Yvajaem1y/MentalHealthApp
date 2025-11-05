@@ -1,11 +1,15 @@
 package com.hackhathon.data.utils
 
+import com.hackhathon.data.models.BreathingTechniquesData
 import com.hackhathon.data.models.Emotion
 import com.hackhathon.data.models.Message
 import com.hackhathon.data.models.Note
+import com.hackhathon.data.models.UserData
+import com.hackhathon.local_database.models.BreathingTechniquesDBO
 import com.hackhathon.local_database.models.EmotionDBO
 import com.hackhathon.local_database.models.MessageDBO
 import com.hackhathon.local_database.models.NoteDBO
+import com.hackhathon.local_database.models.UserDataDBO
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -56,6 +60,37 @@ internal fun EmotionDBO.toEmotion(): Emotion {
     return Emotion(
         id = id,
         name = name
+    )
+}
+
+internal fun BreathingTechniquesData.toDBO(): BreathingTechniquesDBO {
+    return BreathingTechniquesDBO(
+        id = id,
+    )
+}
+
+
+internal fun BreathingTechniquesDBO.toData(): BreathingTechniquesData {
+    return BreathingTechniquesData(
+        id = id,
+    )
+}
+
+internal fun UserDataDBO.toData(): UserData {
+    return UserData(
+        id = id,
+        userName = userName,
+        userAge = userAge,
+        userGender = userGender
+    )
+}
+
+internal fun UserData.toDbo(): UserDataDBO {
+    return UserDataDBO(
+        id = id,
+        userName = userName,
+        userAge = userAge,
+        userGender = userGender
     )
 }
 

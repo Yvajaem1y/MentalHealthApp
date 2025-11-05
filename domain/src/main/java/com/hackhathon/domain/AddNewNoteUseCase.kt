@@ -1,10 +1,8 @@
 package com.hackhathon.domain
 
-import com.hackhathon.data.RequestResults.RequestResult
 import com.hackhathon.data.models.Emotion
 import com.hackhathon.data.models.Note
 import com.hackhathon.data.repository.NoteRepository
-import kotlinx.coroutines.flow.Flow
 import java.util.Date
 import javax.inject.Inject
 

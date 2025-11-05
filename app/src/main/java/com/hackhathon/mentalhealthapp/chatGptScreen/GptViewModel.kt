@@ -1,6 +1,5 @@
 package com.hackhathon.mentalhealthapp.chatGptScreen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hackhathon.data.RequestResults.GPTRequestResult
@@ -44,7 +43,6 @@ class GptViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             requestToGptUseCase.get().invoke(text)
                 .collect { result ->
-                    Log.d("AAA", "GPT request result: $result")
                     _GptRequest_stateRequestToGpt.value = result.toState()
                 }
         }

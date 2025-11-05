@@ -25,6 +25,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -46,16 +49,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hackhathon.data.models.Message
 import com.hackhathon.features.R
 import com.hackhathon.ui_kit.theme.MainPurpleColor
 
-private lateinit var viewModel: GptViewModel
-
 @Composable
-fun ChatWithGptScreen() {
-    viewModel = viewModel()
+fun ChatWithGptScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: GptViewModel
+) {
+    val context = LocalContext.current
+    BackHandler(onBack = onNavigateBack)
+
     val messagesState = viewModel.messagesGptRequestState.collectAsState()
     val gptRequestState = viewModel.gptRequestStateRequestToGpt.collectAsState()
     var textValue by remember { mutableStateOf("") }
@@ -76,6 +83,9 @@ fun ChatWithGptScreen() {
             .statusBarsPadding()
             .systemBarsPadding()
     ) {
+        // Кастомный AppBar с кнопкой назад
+        CustomAppBar(onBackClick = onNavigateBack)
+
         Box(modifier = Modifier.weight(1f)) {
             when (val currentState = messagesState.value) {
                 is MessageState.Success -> MessageListScreen(currentState.messages, listState)
@@ -89,20 +99,60 @@ fun ChatWithGptScreen() {
             when (val currentState = gptRequestState.value) {
                 is GptRequestState.Success -> {
                     textValue = ""
-                    ChatInputField(textValue, { textValue = it })
+                    ChatInputField(textValue, { textValue = it }, viewModel)
                 }
-                is GptRequestState.None -> ChatInputField(textValue, { textValue = it })
-                is GptRequestState.Error -> ChatInputField(textValue, { textValue = it })
-                is GptRequestState.Loading -> LoadingInputField(textValue, { textValue = it })
+                is GptRequestState.None -> ChatInputField(textValue, { textValue = it }, viewModel)
+                is GptRequestState.Error -> ChatInputField(textValue, { textValue = it }, viewModel)
+                is GptRequestState.Loading -> LoadingInputField(textValue, { textValue = it }, viewModel)
             }
         }
     }
 }
 
 @Composable
+fun BackHandler(onBack: () -> Unit) {
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+    }
+}
+
+@Composable
+fun CustomAppBar(onBackClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 24.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .size(24.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.left_arrow),
+                contentDescription = "Назад",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Text(
+            text = "AI дневник",
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp),
+            fontSize = 18.sp,
+            fontFamily = FontFamily(Font(resId = R.font.inter_medium, weight = FontWeight.Bold)),
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
 private fun ChatInputField(
     textValue: String,
-    onTextChange: (String) -> Unit
+    onTextChange: (String) -> Unit,
+    viewModel: GptViewModel
 ) {
     InputFieldLayout(
         textValue = textValue,
@@ -117,7 +167,8 @@ private fun ChatInputField(
 @Composable
 private fun LoadingInputField(
     textValue: String,
-    onTextChange: (String) -> Unit
+    onTextChange: (String) -> Unit,
+    viewModel: GptViewModel
 ) {
     InputFieldLayout(
         textValue = textValue,
@@ -141,7 +192,7 @@ private fun InputFieldLayout(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 14.dp, end = 14.dp)
+            .padding(start = 14.dp, end = 14.dp, bottom = 16.dp)
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly

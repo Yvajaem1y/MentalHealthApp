@@ -1,7 +1,5 @@
 package com.hackhathon.mentalhealthapp.mainScreen
 
-import android.app.Activity
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,17 +40,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.hackhathon.data.models.Message
@@ -60,7 +55,6 @@ import com.hackhathon.data.models.Note
 import com.hackhathon.mentalhealthapp.addNoteScreen.AddNoteDialog
 import com.hackhathon.mentalhealthapp.addNoteScreen.NoteState
 import com.hackhathon.mentalhealthapp.addNoteScreen.NoteViewModel
-import com.hackhathon.mentalhealthapp.chatGptScreen.ChatWithGptActivity
 import com.hackhathon.mentalhealthapp.chatGptScreen.EmptyScreen
 import com.hackhathon.mentalhealthapp.chatGptScreen.ErrorScreen
 import com.hackhathon.mentalhealthapp.chatGptScreen.GptViewModel
@@ -73,28 +67,24 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import com.hackhathon.features.R
-
-data class DateItem(
-    val date: String,
-    val dayOfWeek: String,
-    val fullDate: Calendar,
-    val isSelected: Boolean = false,
-    val isToday: Boolean = false
-)
+import com.hackhathon.mentalhealthapp.profileScreen.DefaultAvatarImage
+import com.hackhathon.mentalhealthapp.profileScreen.ProfileViewModel
+import com.hackhathon.mentalhealthapp.profileScreen.toRequestResult
 
 @OptIn(ExperimentalGlideComposeApi::class)
-@Preview
 @Composable
-fun MainScreen() {
-    val dates = remember { mutableStateOf(generateDates()) }
-    val selectedDateIndex = remember { mutableStateOf(27) }
-    val context = LocalContext.current
-    var showAddNoteDialog by remember { mutableStateOf(false) }
+fun MainScreen(
+    onNavigateToChat: () -> Unit,
+    messageViewModel: GptViewModel,
+    noteViewModel: NoteViewModel,
+    mainScreenViewModel: MainScreenViewModel,
+    profileViewModel: ProfileViewModel
+) {
+    val dates by mainScreenViewModel.dates
+    val selectedDateIndex by mainScreenViewModel.selectedDateIndex
+    val showAddNoteDialog by mainScreenViewModel.showAddNoteDialog
 
-    val messageViewModel: GptViewModel = viewModel()
     val messagesState = messageViewModel.messagesGptRequestState.collectAsState()
-
-    val noteViewModel: NoteViewModel = viewModel()
     val noteState = noteViewModel.todayNotesState.collectAsState()
 
     Column(
@@ -108,26 +98,29 @@ fun MainScreen() {
                 )
             )
     ) {
-        HeaderSection()
-        CalendarSection(
-            dates = dates.value,
-            selectedDateIndex = selectedDateIndex.value,
-            onDateSelected = { index ->
-                val updatedDates = dates.value.mapIndexed { i, dateItem ->
-                    dateItem.copy(isSelected = i == index)
-                }
-                dates.value = updatedDates
-                selectedDateIndex.value = index
+        HeaderSection(dates, selectedDateIndex, mainScreenViewModel, profileViewModel)
+        FeelingSection(
+            showAddNoteDialog = showAddNoteDialog,
+            onBackClick = onNavigateToChat,
+            onShowAddNoteDialogChange = { show ->
+                if (show) mainScreenViewModel.showAddNoteDialog()
+                else mainScreenViewModel.hideAddNoteDialog()
+            },
+            onSaveNote = {
+                noteViewModel.addNewNote()
+                mainScreenViewModel.hideAddNoteDialog()
             }
         )
-        FeelingSection(showAddNoteDialog) { showAddNoteDialog = it }
-        DiarySection(messagesState.value, context)
+        DiarySection(messagesState.value, onNavigateToChat)
         NotesSection(noteState.value)
     }
 }
 
 @Composable
-private fun HeaderSection() {
+private fun HeaderSection(dates: List<DateItem>,
+                          selectedDateIndex: Int,
+                          mainScreenViewModel: MainScreenViewModel,
+                          profileViewModel: ProfileViewModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -143,29 +136,43 @@ private fun HeaderSection() {
                 .padding(bottom = 16.dp, top = 8.dp, start = 16.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ProfileImage()
-            GreetingText()
+            ProfileImage(profileViewModel)
+            GreetingText(profileViewModel)
         }
+        CalendarSection(
+            dates = dates,
+            selectedDateIndex = selectedDateIndex,
+            onDateSelected = { index ->
+                mainScreenViewModel.selectDate(index)
+            }
+        )
     }
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-private fun ProfileImage() {
-    GlideImage(
-        model = "https://example.com/photo.jpg",
-        contentDescription = "Profile photo",
-        modifier = Modifier
-            .size(44.dp)
+private fun ProfileImage(viewModel : ProfileViewModel) {
+    val imageUri = viewModel.userImageUri.value
+
+    if (imageUri != null) {
+        GlideImage(
+            model = imageUri,
+            contentDescription = "Profile photo",
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop,
+        )
+    } else {
+        DefaultAvatarImage(modifier = Modifier.size(44.dp)
             .clip(CircleShape)
-            .padding(end = 12.dp),
-        contentScale = ContentScale.Crop,
-    )
+            .background(White))
+    }
 }
 
 @Composable
-private fun GreetingText() {
-    Row {
+private fun GreetingText(profileViewModel: ProfileViewModel) {
+    Row(modifier = Modifier.padding(12.dp)) {
         Text(
             text = "Привет,",
             fontFamily = FontFamily(Font(resId = R.font.inter_medium, weight = FontWeight.Medium)),
@@ -174,7 +181,7 @@ private fun GreetingText() {
             letterSpacing = (-0.01).em
         )
         Text(
-            text = " Диана",
+            text = " ${profileViewModel.userDataState.value.toRequestResult().data?.userName} \uD83D\uDC4B",
             fontFamily = FontFamily(Font(resId = R.font.inter_bold, weight = FontWeight.Bold)),
             fontSize = 18.sp,
             lineHeight = 18.sp,
@@ -186,7 +193,9 @@ private fun GreetingText() {
 @Composable
 private fun FeelingSection(
     showAddNoteDialog: Boolean,
-    onShowAddNoteDialogChange: (Boolean) -> Unit
+    onBackClick: () -> Unit,
+    onShowAddNoteDialogChange: (Boolean) -> Unit,
+    onSaveNote: (String) -> Unit
 ) {
     Text(
         text = "Как ты сегодня себя чувствуешь?",
@@ -225,14 +234,15 @@ private fun FeelingSection(
         AddNoteDialog(
             onDismiss = { onShowAddNoteDialogChange(false) },
             onSave = { noteText ->
-                onShowAddNoteDialogChange(false)
-            }
+                onSaveNote(noteText)
+            },
+            onBackClick = onBackClick
         )
     }
 }
 
 @Composable
-private fun DiarySection(messagesState: MessageState, context: android.content.Context) {
+private fun DiarySection(messagesState: MessageState, onNavigateToChat: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -246,7 +256,7 @@ private fun DiarySection(messagesState: MessageState, context: android.content.C
             lineHeight = 18.sp,
             letterSpacing = (-0.01).em
         )
-        OpenFullChatText(context)
+        OpenFullChatText(onNavigateToChat)
     }
 
     Box(modifier = Modifier
@@ -263,7 +273,7 @@ private fun DiarySection(messagesState: MessageState, context: android.content.C
 }
 
 @Composable
-private fun OpenFullChatText(context: android.content.Context) {
+private fun OpenFullChatText(onNavigateToChat: () -> Unit) {
     Text(
         text = "Открыть полный чат",
         fontFamily = FontFamily(Font(resId = R.font.inter_regular, weight = FontWeight.Bold)),
@@ -273,10 +283,7 @@ private fun OpenFullChatText(context: android.content.Context) {
         color = Color(0x80101111),
         modifier = Modifier
             .clickable {
-                val intent = Intent(context, ChatWithGptActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
-                context.startActivity(intent)
-                (context as? Activity)?.overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+                onNavigateToChat()
             }
             .padding(4.dp)
     )

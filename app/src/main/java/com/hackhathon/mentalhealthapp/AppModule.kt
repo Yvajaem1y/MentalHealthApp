@@ -1,6 +1,7 @@
 package com.hackhathon.mentalhealthapp
 
 import android.content.Context
+import com.hackhathon.data.BreathingTechniqueRepository
 import com.hackhathon.local_database.RoomDatabase
 import com.hackhathon.yandex_gpt_api.YandexGPTClient
 import dagger.Module
@@ -18,8 +19,9 @@ object AppModule {
     @Singleton
     fun provideYandexGPTClient(): YandexGPTClient {
         return YandexGPTClient(
-            apiKey = "AQVNxYrxV-Mt0CmAKFFcY7cenHdzguldEXMBbmSp",
-            folderId = "b1g3h6r0glrjdddh24gc"
+            apiKey = BuildConfig.API_KEY,
+            folderId = BuildConfig.FOLDER_ID
+
         )
     }
 
@@ -30,4 +32,11 @@ object AppModule {
             context
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideBreathingTechniqueRepository(roomDatabase: RoomDatabase): BreathingTechniqueRepository {
+        return BreathingTechniqueRepository(roomDatabase)
+    }
+
 }

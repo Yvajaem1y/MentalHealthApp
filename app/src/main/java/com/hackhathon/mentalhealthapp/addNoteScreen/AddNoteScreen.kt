@@ -38,10 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hackhathon.data.models.Emotion
 import com.hackhathon.features.R
-import com.hackhathon.mentalhealthapp.chatGptScreen.ChatWithGptActivity
 import com.hackhathon.mentalhealthapp.chatGptScreen.GptViewModel
 import com.hackhathon.ui_kit.theme.MainPurpleColor
 
@@ -52,18 +52,18 @@ private lateinit var gptViewModel: GptViewModel
 @Composable
 fun AddNoteDialog(
     onDismiss: () -> Unit,
-    onSave: (String) -> Unit
+    onSave: (String) -> Unit,
+    onBackClick: () -> Unit
 ) {
-    noteViewModel = viewModel()
-    gptViewModel = viewModel()
-    val context = LocalContext.current
+    noteViewModel = hiltViewModel()
+    gptViewModel = hiltViewModel()
     val noteText = noteViewModel.noteText
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Box(modifier = Modifier.fillMaxSize().offset(y = 30.dp)) {
+        Box(modifier = Modifier.fillMaxSize().offset(y = 20.dp)) {
             DialogContent(
                 noteText = noteText,
                 onNoteTextChange = { newText -> noteViewModel.updateNoteText(newText) },
@@ -72,7 +72,7 @@ fun AddNoteDialog(
                 onDiscussWithAI = {
                     gptViewModel.requestToGpt(noteViewModel.noteText)
                     noteViewModel.clearNoteText()
-                    navigateToChatActivity(context)
+                    navigateToChatActivity(onBackClick)
                     onDismiss()
                 },
                 onSaveNote = {
@@ -291,9 +291,6 @@ private fun ActionButtons(
     }
 }
 
-private fun navigateToChatActivity(context: android.content.Context) {
-    val intent = Intent(context, ChatWithGptActivity::class.java)
-    intent.flags = Intent.FLAG_ACTIVITY_NO_ANIMATION
-    context.startActivity(intent)
-    (context as? Activity)?.overridePendingTransition(R.anim.fade_in, R.anim.fade_out)
+private fun navigateToChatActivity(onBackClick: () -> Unit) {
+    onBackClick()
 }
