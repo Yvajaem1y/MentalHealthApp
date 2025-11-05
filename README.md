@@ -72,6 +72,6 @@ https://drive.google.com/file/d/16SfkZkGXnoa0UcCPvMyatw4jZvs2Ltm1/view?usp=shari
 •	Navigation Compose
 •	Material 3 Design System
 •	AI-интеграция через локальный чат с подсказками
-• База данных реализованна на Room для комфорта пользования
+• База данных реализованна на Room для комфорта пользователя
 • ИИ - YandexChatGPT
 
